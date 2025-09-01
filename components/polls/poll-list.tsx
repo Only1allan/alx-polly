@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,54 +11,114 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-
-const demoPolls = [
-  {
-    id: "1",
-    title: "What is your favorite programming language?",
-    description: "Choose one from the list below.",
-    tags: ["tech", "programming", "webdev"],
-  },
-  {
-    id: "2",
-    title: "Which frontend framework do you prefer?",
-    description: "Select your go-to framework.",
-    tags: ["frontend", "javascript", "react"],
-  },
-  {
-    id: "3",
-    title: "Best code editor for web development?",
-    description: "What's your editor of choice?",
-    tags: ["tools", "editor", "vscode"],
-  },
-];
+import { getPolls, deletePoll } from "@/lib/supabase";
+import { Poll } from "@/lib/types";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function PollList() {
+  const [polls, setPolls] = useState<Poll[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { session } = useAuth();
+
+  useEffect(() => {
+    async function loadPolls() {
+      try {
+        const polls = await getPolls();
+        setPolls(polls);
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPolls();
+  }, []);
+
+  const handleDelete = async (pollId: number) => {
+    try {
+      await deletePoll(pollId);
+      setPolls(polls.filter((poll) => poll.id !== pollId));
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  if (loading) {
+    return <p>Loading polls...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-500">Error loading polls: {error}</p>;
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {demoPolls.map((poll) => (
-        <Link href={`/polls/${poll.id}`} key={poll.id} className="group">
-          <Card className="transform transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl">
+      {polls.map((poll) => (
+        <Card
+          key={poll.id}
+          className="transform transition-transform duration-300 hover:scale-105 hover:shadow-xl flex flex-col"
+        >
+          <Link href={`/polls/${poll.id}`} className="group flex-grow">
             <CardHeader>
               <CardTitle className="text-lg font-bold group-hover:text-primary">
-                {poll.title}
+                {poll.question}
               </CardTitle>
-              <CardDescription>{poll.description}</CardDescription>
+              <CardDescription>
+                Created at {new Date(poll.created_at).toLocaleString()}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 Click to view details and vote.
               </p>
             </CardContent>
-            <CardFooter className="flex space-x-2">
-              {poll.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+          </Link>
+          {session?.user.id === poll.created_by && (
+            <CardFooter className="flex justify-end space-x-2 p-4">
+              <Link href={`/polls/edit/${poll.id}`}>
+                <Button variant="outline" size="sm">
+                  Edit
+                </Button>
+              </Link>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your poll and all its votes.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(poll.id)}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardFooter>
-          </Card>
-        </Link>
+          )}
+        </Card>
       ))}
     </div>
   );

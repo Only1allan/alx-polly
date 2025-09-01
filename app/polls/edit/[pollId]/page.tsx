@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { Poll } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,18 +17,55 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { createPoll } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 
-export function CreatePollForm() {
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+export default function EditPollPage() {
   const { session } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const pollId = params.pollId as string;
+
+  const [poll, setPoll] = useState<Poll | null>(null);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState<string[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      router.push("/auth/login");
+    }
+  }, [session, router]);
+
+  useEffect(() => {
+    async function fetchPoll() {
+      if (!pollId) return;
+
+      const { data, error } = await supabase
+        .from("polls")
+        .select("*")
+        .eq("id", pollId)
+        .single();
+
+      if (error || !data) {
+        setError("Poll not found or you don't have permission to edit it.");
+        return;
+      }
+
+      if (data.created_by !== session?.user.id) {
+        setError("You don't have permission to edit this poll.");
+        return;
+      }
+
+      setPoll(data);
+      setQuestion(data.question);
+      setOptions(data.options);
+    }
+
+    if (session) {
+      fetchPoll();
+    }
+  }, [pollId, session]);
 
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options];
@@ -43,11 +84,6 @@ export function CreatePollForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) {
-      setError("You must be logged in to create a poll.");
-      return;
-    }
-
     if (!question.trim()) {
       setError("Poll title is required.");
       return;
@@ -61,35 +97,46 @@ export function CreatePollForm() {
       return;
     }
 
-    setIsCreating(true);
+    setIsUpdating(true);
     setError(null);
 
     try {
-      const newPoll = {
-        question,
-        options: options.filter((opt) => opt.trim() !== ""),
-      };
-      const data = await createPoll(newPoll, session.user.id);
-      if (data) {
-        setSuccessMessage("Poll created successfully!");
-        setTimeout(() => {
-          router.push("/polls");
-        }, 2000);
-      }
+      const { error } = await supabase
+        .from("polls")
+        .update({
+          question,
+          options: options.filter((opt) => opt.trim() !== ""),
+        })
+        .eq("id", pollId);
+
+      if (error) throw error;
+
+      setSuccessMessage("Poll updated successfully!");
+      setTimeout(() => {
+        router.push("/polls");
+      }, 2000);
     } catch (error: any) {
       setError(error.message);
     } finally {
-      setIsCreating(false);
+      setIsUpdating(false);
     }
   };
+
+  if (!poll && !error) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-500">{error}</p>;
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold">Create a New Poll</CardTitle>
+          <CardTitle className="text-3xl font-bold">Edit Poll</CardTitle>
           <CardDescription>
-            Fill out the form below to create your poll.
+            Update the details of your poll below.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -106,7 +153,6 @@ export function CreatePollForm() {
                 </Label>
                 <Input
                   id="title"
-                  placeholder="e.g., What's your favorite season?"
                   className="text-lg p-4"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
@@ -124,16 +170,14 @@ export function CreatePollForm() {
                       placeholder={`Option ${index + 1}`}
                       className="text-lg p-4"
                     />
-                    {options.length > 2 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeOption(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeOption(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
                 <Button
@@ -145,16 +189,18 @@ export function CreatePollForm() {
                   Add Option
                 </Button>
               </div>
-              {error && <p className="text-red-500">{error}</p>}
+              {error && !successMessage && (
+                <p className="text-red-500">{error}</p>
+              )}
             </div>
           </CardContent>
           <CardFooter>
             <Button
               type="submit"
               className="w-full text-lg p-6"
-              disabled={isCreating || !!successMessage}
+              disabled={isUpdating || !!successMessage}
             >
-              {isCreating ? "Creating..." : "Create Poll"}
+              {isUpdating ? "Updating..." : "Update Poll"}
             </Button>
           </CardFooter>
         </form>
