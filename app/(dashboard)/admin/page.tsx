@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { deletePoll } from "@/app/lib/actions/poll-actions";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/app/lib/context/auth-context";
 
 interface Poll {
   id: string;
@@ -24,10 +26,31 @@ export default function AdminPage() {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
+    checkAdminAccess();
+  }, [user]);
+
+  const checkAdminAccess = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    // Check if user has admin privileges
+    const userIsAdmin = user.user_metadata?.role === 'admin' || user.email === 'admin@alxpolly.com';
+    
+    if (!userIsAdmin) {
+      router.push("/polls"); // Redirect non-admin users
+      return;
+    }
+
+    setIsAdmin(true);
     fetchAllPolls();
-  }, []);
+  };
 
   const fetchAllPolls = async () => {
     const supabase = createClient();
@@ -48,7 +71,7 @@ export default function AdminPage() {
     const result = await deletePoll(pollId);
 
     if (!result.error) {
-      setPolls(polls.filter((poll) => poll.id !== pollId));
+      setPolls(polls.filter((poll: Poll) => poll.id !== pollId));
     }
 
     setDeleteLoading(null);
@@ -56,6 +79,11 @@ export default function AdminPage() {
 
   if (loading) {
     return <div className="p-6">Loading all polls...</div>;
+  }
+
+  // If not admin, don't render admin content
+  if (!isAdmin) {
+    return <div className="p-6">Access denied. Admin privileges required.</div>;
   }
 
   return (
@@ -68,7 +96,7 @@ export default function AdminPage() {
       </div>
 
       <div className="grid gap-4">
-        {polls.map((poll) => (
+        {polls.map((poll: Poll) => (
           <Card key={poll.id} className="border-l-4 border-l-blue-500">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -109,7 +137,7 @@ export default function AdminPage() {
               <div className="space-y-2">
                 <h4 className="font-medium">Options:</h4>
                 <ul className="list-disc list-inside space-y-1">
-                  {poll.options.map((option, index) => (
+                  {poll.options.map((option: string, index: number) => (
                     <li key={index} className="text-gray-700">
                       {option}
                     </li>
