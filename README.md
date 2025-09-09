@@ -1,355 +1,96 @@
-# ALX Polly - Modern Polling Application
+# ALX Polly: A Polling Application
 
-![ALX Polly](https://img.shields.io/badge/ALX-Polly-blue) ![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black) ![React](https://img.shields.io/badge/React-19.1.0-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![Supabase](https://img.shields.io/badge/Supabase-2.56.0-green) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.0-blue)
+Welcome to ALX Polly, a full-stack polling application built with Next.js, TypeScript, and Supabase. This project serves as a practical learning ground for modern web development concepts, with a special focus on identifying and fixing common security vulnerabilities.
 
-A modern, full-stack polling application built with Next.js, React, TypeScript, and Supabase. Create, share, and vote on polls with real-time updates and beautiful UI components.
+## About the Application
 
-## 🚀 Features
+ALX Polly allows authenticated users to create, share, and vote on polls. It's a simple yet powerful application that demonstrates key features of modern web development:
 
-### Core Functionality
-- **User Authentication**: Secure login and registration system
-- **Poll Creation**: Create polls with multiple options and custom titles
-- **Real-time Voting**: Vote on polls with instant result updates
-- **Poll Management**: Edit, delete, and manage your created polls
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+-   **Authentication**: Secure user sign-up and login.
+-   **Poll Management**: Users can create, view, and delete their own polls.
+-   **Voting System**: A straightforward system for casting and viewing votes.
+-   **User Dashboard**: A personalized space for users to manage their polls.
 
-### Technical Features
-- **Modern Stack**: Built with Next.js 15, React 19, and TypeScript
-- **Database**: Supabase PostgreSQL with real-time subscriptions
-- **UI Components**: Custom components built with Radix UI and TailwindCSS
-- **Authentication**: Supabase Auth with secure session management
-- **Testing**: Comprehensive test suite with Jest and React Testing Library
+The application is built with a modern tech stack:
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 15.5.2 with App Router
-- **UI Library**: React 19.1.0
-- **Language**: TypeScript 5.0
-- **Styling**: TailwindCSS 4.0 with custom components
-- **UI Components**: Radix UI primitives
-- **Icons**: Lucide React
-
-### Backend & Database
-- **Backend**: Supabase (PostgreSQL + Real-time + Auth)
-- **API**: Next.js API routes with server actions
-- **Authentication**: Supabase Auth with JWT
-
-### Development & Testing
-- **Testing**: Jest 30.1.3 + React Testing Library 16.3.0
-- **Type Checking**: TypeScript with strict mode
-- **Linting**: ESLint with Next.js configuration
-- **Package Manager**: npm
-
-## 📁 Project Structure
-
-```
-alx-polly/
-├── app/                          # Next.js App Router pages
-│   ├── auth/                     # Authentication pages
-│   │   ├── login/               # Login page and tests
-│   │   ├── register/            # Registration page and tests
-│   │   └── __tests__/           # Auth redirect tests
-│   ├── polls/                   # Poll-related pages
-│   │   ├── new/                 # Create poll page
-│   │   ├── [pollId]/            # Individual poll view
-│   │   ├── edit/[pollId]/       # Edit poll page
-│   │   └── __tests__/           # Polls page tests
-│   ├── globals.css              # Global styles
-│   ├── layout.tsx               # Root layout component
-│   └── page.tsx                 # Home page
-├── components/                   # Reusable UI components
-│   ├── auth/                    # Authentication components
-│   ├── polls/                   # Poll-related components
-│   └── ui/                      # Base UI components (buttons, cards, etc.)
-├── context/                     # React context providers
-│   └── AuthContext.tsx          # Authentication context
-├── lib/                         # Utility functions and configurations
-│   ├── supabase.ts              # Supabase client and functions
-│   ├── types.ts                 # TypeScript type definitions
-│   ├── utils.ts                 # Utility functions
-│   └── schema.sql               # Database schema
-├── public/                      # Static assets
-├── __mocks__/                   # Jest mocks for testing
-├── coverage/                    # Test coverage reports
-├── jest.config.js               # Jest configuration
-├── jest.setup.js                # Jest setup file
-├── next.config.ts               # Next.js configuration
-├── tailwind.config.js           # TailwindCSS configuration
-├── tsconfig.json                # TypeScript configuration
-└── package.json                 # Project dependencies and scripts
-```
-
-## 🚦 Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Supabase account (for database and authentication)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Only1allan/alx-polly.git
-   cd alx-polly
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. **Set up the database**
-   - Create a new Supabase project
-   - Run the SQL commands from `lib/schema.sql` in your Supabase SQL editor
-   - Configure Row Level Security (RLS) policies as needed
-
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 📱 Usage
-
-### For Users
-
-1. **Create an Account**
-   - Visit the registration page
-   - Enter your email and password
-   - Verify your email (if email confirmation is enabled)
-
-2. **Create a Poll**
-   - Log in to your account
-   - Navigate to "Create Poll"
-   - Enter poll title and options
-   - Share the poll with others
-
-3. **Vote on Polls**
-   - Browse available polls
-   - Select your preferred option
-   - View real-time results
-
-4. **Manage Your Polls**
-   - View all your created polls
-   - Edit poll details
-   - Delete polls you own
-
-### For Developers
-
-1. **Run Tests**
-   ```bash
-   npm test                    # Run all tests
-   npm test -- --watch        # Run tests in watch mode
-   npm test -- --coverage     # Run tests with coverage report
-   ```
-
-2. **Build for Production**
-   ```bash
-   npm run build              # Build the application
-   npm start                  # Start production server
-   ```
-
-3. **Type Checking**
-   ```bash
-   npx tsc --noEmit           # Check TypeScript types
-   ```
-
-## 🧪 Testing
-
-### Test Coverage
-The project includes comprehensive testing for:
-- **Component Rendering**: All major components have rendering tests
-- **User Interactions**: Form submissions, button clicks, navigation
-- **Authentication Flow**: Login, registration, and session management
-- **Error Handling**: Invalid inputs and network failures
-
-### Running Tests
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm test -- --watch
-
-# Run tests with coverage
-npm test -- --coverage
-
-# Run specific test file
-npm test -- auth/login/__tests__/page.test.tsx
-```
-
-### Test Structure
-- **Unit Tests**: Individual component functionality
-- **Integration Tests**: Component interactions and data flow
-- **Mocked Dependencies**: Supabase, Next.js router, and external APIs
-
-For detailed test coverage analysis, see [TEST_COVERAGE_ANALYSIS.md](./TEST_COVERAGE_ANALYSIS.md).
-
-## 🏗️ Architecture
-
-### Component Architecture
-- **Page Components**: Handle routing and page-level logic
-- **Feature Components**: Business logic components (auth, polls)
-- **UI Components**: Reusable, generic components
-- **Context Providers**: Global state management
-
-### Data Flow
-1. **Client**: User interacts with React components
-2. **Context**: Authentication state managed globally
-3. **API Layer**: Supabase client handles data operations
-4. **Database**: PostgreSQL with real-time subscriptions
-5. **Authentication**: Supabase Auth with JWT tokens
-
-### State Management
-- **Authentication**: React Context + Supabase Auth
-- **Local State**: React useState and useReducer
-- **Server State**: Supabase real-time subscriptions
-
-## 🔧 Configuration
-
-### Environment Variables
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Optional: Email Configuration
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-```
-
-### Database Schema
-The application uses the following main tables:
-- **polls**: Poll information (title, options, creator)
-- **votes**: Individual vote records
-- **users**: User profiles (managed by Supabase Auth)
-
-See `lib/schema.sql` for complete schema definition.
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy automatically on push
-
-### Other Platforms
-The application can be deployed to any platform that supports Next.js:
-- Netlify
-- Railway
-- AWS Amplify
-- Digital Ocean App Platform
-
-## 🤝 Contributing
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass (`npm test`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
-### Code Standards
-- **TypeScript**: Use strict type checking
-- **Testing**: Maintain test coverage above 80%
-- **Comments**: Add JSDoc comments for functions and components
-- **Formatting**: Use Prettier for consistent code formatting
-
-### Pull Request Guidelines
-- Include a clear description of changes
-- Add tests for new features
-- Update documentation as needed
-- Ensure CI/CD checks pass
-
-## 📊 Performance
-
-### Optimizations
-- **Image Optimization**: Next.js automatic image optimization
-- **Code Splitting**: Automatic code splitting with Next.js
-- **Caching**: Efficient caching strategies for API calls
-- **Bundle Analysis**: Regular bundle size monitoring
-
-### Monitoring
-- **Core Web Vitals**: Optimized for excellent user experience
-- **Real User Monitoring**: Performance tracking in production
-- **Error Tracking**: Comprehensive error logging and reporting
-
-## 🔐 Security
-
-### Authentication Security
-- **JWT Tokens**: Secure token-based authentication
-- **Row Level Security**: Database-level access control
-- **Session Management**: Automatic session refresh and expiration
-- **HTTPS Only**: Secure communication in production
-
-### Data Protection
-- **Input Validation**: Client and server-side validation
-- **SQL Injection Prevention**: Parameterized queries
-- **XSS Protection**: Content sanitization
-- **CSRF Protection**: Built-in Next.js CSRF protection
-
-## 📈 Roadmap
-
-### Short Term (Next 2-3 months)
-- [ ] Real-time poll results
-- [ ] Poll sharing and embed functionality
-- [ ] Advanced poll analytics
-- [ ] Mobile app (React Native)
-
-### Medium Term (3-6 months)
-- [ ] Poll templates and themes
-- [ ] User profiles and dashboards
-- [ ] API for third-party integrations
-- [ ] Advanced voting options (ranked choice, etc.)
-
-### Long Term (6+ months)
-- [ ] Multi-language support
-- [ ] Advanced analytics and reporting
-- [ ] Enterprise features and white-labeling
-- [ ] AI-powered poll insights
-
-## 📞 Support
-
-### Documentation
-- [Test Coverage Analysis](./TEST_COVERAGE_ANALYSIS.md)
-- [API Documentation](./docs/api.md)
-- [Deployment Guide](./docs/deployment.md)
-
-### Community
-- **Issues**: [GitHub Issues](https://github.com/Only1allan/alx-polly/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Only1allan/alx-polly/discussions)
-- **Email**: support@alx-polly.com
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **ALX Africa**: For the inspiration and learning opportunity
-- **Vercel**: For the excellent Next.js framework
-- **Supabase**: For the powerful backend-as-a-service platform
-- **Radix UI**: For the accessible component primitives
-- **TailwindCSS**: For the utility-first CSS framework
+-   **Framework**: [Next.js](https://nextjs.org/) (App Router)
+-   **Language**: [TypeScript](https://www.typescriptlang.org/)
+-   **Backend & Database**: [Supabase](https://supabase.io/)
+-   **UI**: [Tailwind CSS](https://tailwindcss.com/) with [shadcn/ui](https://ui.shadcn.com/)
+-   **State Management**: React Server Components and Client Components
 
 ---
 
-**Built with ❤️ by the ALX Polly Development Team**
+## 🚀 The Challenge: Security Audit & Remediation
 
-**Last Updated**: September 2025  
-**Version**: 1.0.0  
-**Next.js**: 15.5.2
+As a developer, writing functional code is only half the battle. Ensuring that the code is secure, robust, and free of vulnerabilities is just as critical. This version of ALX Polly has been intentionally built with several security flaws, providing a real-world scenario for you to practice your security auditing skills.
+
+**Your mission is to act as a security engineer tasked with auditing this codebase.**
+
+### Your Objectives:
+
+1.  **Identify Vulnerabilities**:
+    -   Thoroughly review the codebase to find security weaknesses.
+    -   Pay close attention to user authentication, data access, and business logic.
+    -   Think about how a malicious actor could misuse the application's features.
+
+2.  **Understand the Impact**:
+    -   For each vulnerability you find, determine the potential impact.Query your AI assistant about it. What data could be exposed? What unauthorized actions could be performed?
+
+3.  **Propose and Implement Fixes**:
+    -   Once a vulnerability is identified, ask your AI assistant to fix it.
+    -   Write secure, efficient, and clean code to patch the security holes.
+    -   Ensure that your fixes do not break existing functionality for legitimate users.
+
+### Where to Start?
+
+A good security audit involves both static code analysis and dynamic testing. Here’s a suggested approach:
+
+1.  **Familiarize Yourself with the Code**:
+    -   Start with `app/lib/actions/` to understand how the application interacts with the database.
+    -   Explore the page routes in the `app/(dashboard)/` directory. How is data displayed and managed?
+    -   Look for hidden or undocumented features. Are there any pages not linked in the main UI?
+
+2.  **Use Your AI Assistant**:
+    -   This is an open-book test. You are encouraged to use AI tools to help you.
+    -   Ask your AI assistant to review snippets of code for security issues.
+    -   Describe a feature's behavior to your AI and ask it to identify potential attack vectors.
+    -   When you find a vulnerability, ask your AI for the best way to patch it.
+
+---
+
+## Getting Started
+
+To begin your security audit, you'll need to get the application running on your local machine.
+
+### 1. Prerequisites
+
+-   [Node.js](https://nodejs.org/) (v20.x or higher recommended)
+-   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+-   A [Supabase](https://supabase.io/) account (the project is pre-configured, but you may need your own for a clean slate).
+
+### 2. Installation
+
+Clone the repository and install the dependencies:
+
+```bash
+git clone <repository-url>
+cd alx-polly
+npm install
+```
+
+### 3. Environment Variables
+
+The project uses Supabase for its backend. An environment file `.env.local` is needed.Use the keys you created during the Supabase setup process.
+
+### 4. Running the Development Server
+
+Start the application in development mode:
+
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+Good luck, engineer! This is your chance to step into the shoes of a security professional and make a real impact on the quality and safety of this application. Happy hunting!
