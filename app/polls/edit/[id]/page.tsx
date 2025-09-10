@@ -22,7 +22,7 @@ export default function EditPollPage() {
   const { session } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const pollId = params.pollId as string;
+  const pollId = params.id as string;
 
   const [poll, setPoll] = useState<Poll | null>(null);
   const [question, setQuestion] = useState("");

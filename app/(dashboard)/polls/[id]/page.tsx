@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { PollResults } from '@/app/components/ui/poll-results';
 
 // Mock data for a single poll
 const mockPoll = {
@@ -90,26 +91,7 @@ export default function PollDetailPage({ params }: { params: { id: string } }) {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <h3 className="font-medium">Results:</h3>
-              {poll.options.map((option) => (
-                <div key={option.id} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{option.text}</span>
-                    <span>{getPercentage(option.votes)}% ({option.votes} votes)</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2.5">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: `${getPercentage(option.votes)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-              <div className="text-sm text-slate-500 pt-2">
-                Total votes: {totalVotes}
-              </div>
-            </div>
+            <PollResults options={poll.options} totalVotes={totalVotes} />
           )}
         </CardContent>
         <CardFooter className="text-sm text-slate-500 flex justify-between">
