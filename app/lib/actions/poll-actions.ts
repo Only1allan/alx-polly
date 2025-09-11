@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-// import { revalidatePath } from "next/cache"; // Temporarily commented out
+import { revalidatePath } from "next/cache";
 
 // CREATE POLL
 export async function createPoll(formData: FormData) {
@@ -31,6 +31,7 @@ export async function createPoll(formData: FormData) {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
+  
   if (userError) {
     return { error: userError.message };
   }
@@ -40,7 +41,7 @@ export async function createPoll(formData: FormData) {
 
   const { error } = await supabase.from("polls").insert([
     {
-      user_id: user.id,
+      created_by: user.id,  // Changed from user_id to created_by
       question: question.trim(),
       options: options.map(opt => opt.trim()),
     },
@@ -50,7 +51,7 @@ export async function createPoll(formData: FormData) {
     return { error: error.message };
   }
 
-  // revalidatePath("/polls"); // Temporarily commented out
+  revalidatePath("/polls");
   return { error: null };
 }
 
@@ -65,7 +66,20 @@ export async function getUserPolls() {
   const { data, error } = await supabase
     .from("polls")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("created_by", user.id)  // Changed from user_id to created_by
+    .order("created_at", { ascending: false });
+
+  if (error) return { polls: [], error: error.message };
+  return { polls: data ?? [], error: null };
+}
+
+// GET ALL POLLS (PUBLIC)
+export async function getAllPolls() {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from("polls")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) return { polls: [], error: error.message };
@@ -97,13 +111,30 @@ export async function submitVote(pollId: string, optionIndex: number) {
     return { error: 'Invalid vote option' };
   }
 
+  // Get the poll to find the option text
+  const { data: poll, error: pollError } = await supabase
+    .from("polls")
+    .select("options")
+    .eq("id", pollId)
+    .single();
+
+  if (pollError || !poll) {
+    return { error: 'Poll not found' };
+  }
+
+  if (optionIndex >= poll.options.length) {
+    return { error: 'Invalid vote option' };
+  }
+
+  const selectedOption = poll.options[optionIndex];
+
   // Check if user already voted (prevent duplicate voting)
   if (user) {
     const { data: existingVote } = await supabase
       .from("votes")
       .select("id")
       .eq("poll_id", pollId)
-      .eq("user_id", user.id)
+      .eq("voted_by", user.id)  // Changed from user_id to voted_by
       .single();
 
     if (existingVote) {
@@ -114,13 +145,65 @@ export async function submitVote(pollId: string, optionIndex: number) {
   const { error } = await supabase.from("votes").insert([
     {
       poll_id: pollId,
-      user_id: user?.id ?? null,
-      option_index: optionIndex,
+      voted_by: user?.id ?? null,  // Changed from user_id to voted_by
+      option: selectedOption,  // Changed from option_index to option (text)
     },
   ]);
 
   if (error) return { error: error.message };
   return { error: null };
+}
+
+// GET POLL RESULTS
+export async function getPollResults(pollId: string) {
+  const supabase = await createClient();
+  
+  // Get poll details
+  const { data: poll, error: pollError } = await supabase
+    .from("polls")
+    .select("*")
+    .eq("id", pollId)
+    .single();
+
+  if (pollError || !poll) {
+    return { poll: null, results: null, error: "Poll not found" };
+  }
+
+  // Get vote counts for each option
+  const { data: votes, error: votesError } = await supabase
+    .from("votes")
+    .select("option")
+    .eq("poll_id", pollId);
+
+  if (votesError) {
+    return { poll: null, results: null, error: votesError.message };
+  }
+
+  // Count votes for each option
+  const voteCounts: Record<string, number> = {};
+  poll.options.forEach((option: string) => {
+    voteCounts[option] = 0;
+  });
+
+  votes?.forEach((vote) => {
+    if (voteCounts.hasOwnProperty(vote.option)) {
+      voteCounts[vote.option]++;
+    }
+  });
+
+  const results = poll.options.map((option: string) => ({
+    option,
+    votes: voteCounts[option] || 0
+  }));
+
+  const totalVotes = votes?.length || 0;
+
+  return { 
+    poll, 
+    results, 
+    totalVotes,
+    error: null 
+  };
 }
 
 // DELETE POLL
@@ -150,11 +233,11 @@ export async function deletePoll(id: string) {
       .from("polls")
       .delete()
       .eq("id", id)
-      .eq("user_id", user.id);
+      .eq("created_by", user.id);  // Changed from user_id to created_by
     if (error) return { error: error.message };
   }
   
-  // revalidatePath("/polls"); // Temporarily commented out
+  revalidatePath("/polls");
   return { error: null };
 }
 
@@ -201,7 +284,7 @@ export async function updatePoll(pollId: string, formData: FormData) {
       options: options.map(opt => opt.trim()) 
     })
     .eq("id", pollId)
-    .eq("user_id", user.id);
+    .eq("created_by", user.id);  // Changed from user_id to created_by
 
   if (error) {
     return { error: error.message };

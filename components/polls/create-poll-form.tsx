@@ -13,8 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { createPoll } from "@/lib/supabase";
+import { useAuth } from "@/app/lib/context/auth-context";
+import { createPoll } from "@/app/lib/actions/poll-actions";
 import { useRouter } from "next/navigation";
 
 export function CreatePollForm() {
@@ -65,12 +65,17 @@ export function CreatePollForm() {
     setError(null);
 
     try {
-      const newPoll = {
-        question,
-        options: options.filter((opt) => opt.trim() !== ""),
-      };
-      const data = await createPoll(newPoll, session.user.id);
-      if (data) {
+      const formData = new FormData();
+      formData.append('question', question);
+      options.filter(opt => opt.trim()).forEach(option => {
+        formData.append('options', option.trim());
+      });
+
+      const result = await createPoll(formData);
+      
+      if (result?.error) {
+        setError(result.error);
+      } else {
         setSuccessMessage("Poll created successfully!");
         setTimeout(() => {
           router.push("/polls");

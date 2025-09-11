@@ -1,7 +1,8 @@
-'use server';
+'use server'
 
-import { createClient } from '@/lib/supabase/server';
-import { LoginFormData, RegisterFormData } from '../types';
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -9,98 +10,102 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Password validation: minimum 8 chars, at least one letter, one number, one special char
 const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
 
-export async function login(data: LoginFormData) {
-  // Input validation
-  if (!data.email || !EMAIL_REGEX.test(data.email)) {
-    return { error: 'Invalid credentials' };
-  }
-  
-  if (!data.password) {
-    return { error: 'Invalid credentials' };
-  }
-
+export async function login(formData: FormData) {
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: data.email,
-    password: data.password,
-  });
+  // Extract form data
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
 
-  // Generic error message to prevent user enumeration
-  if (error) {
-    return { error: 'Invalid credentials' };
+  // Basic validation
+  if (!email || !password) {
+    return { error: 'Email and password are required' };
   }
 
-  // Success: no error
-  return { error: null };
-}
-
-export async function register(data: RegisterFormData) {
-  // Input validation
-  if (!data.email || !EMAIL_REGEX.test(data.email)) {
-    return { error: 'Please provide a valid email address' };
+  if (!EMAIL_REGEX.test(email)) {
+    return { error: 'Please enter a valid email address' };
   }
-  
-  if (!data.password || !PASSWORD_REGEX.test(data.password)) {
+
+  if (!PASSWORD_REGEX.test(password)) {
     return { error: 'Password must be at least 8 characters with letters, numbers, and special characters' };
   }
-  
-  if (!data.name || data.name.trim().length < 2) {
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidatePath('/', 'layout');
+    redirect('/dashboard/polls');
+  } catch (error) {
+    return { error: 'An unexpected error occurred. Please try again.' };
+  }
+}
+
+export async function register(formData: FormData) {
+  const supabase = await createClient();
+
+  // Extract form data
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const name = formData.get('name') as string;
+
+  // Basic validation
+  if (!email || !password || !name) {
+    return { error: 'All fields are required' };
+  }
+
+  if (!EMAIL_REGEX.test(email)) {
+    return { error: 'Please enter a valid email address' };
+  }
+
+  if (!PASSWORD_REGEX.test(password)) {
+    return { error: 'Password must be at least 8 characters with letters, numbers, and special characters' };
+  }
+
+  if (name.trim().length < 2) {
     return { error: 'Name must be at least 2 characters long' };
   }
 
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signUp({
-    email: data.email,
-    password: data.password,
-    options: {
-      data: {
-        name: data.name.trim(),
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name.trim(),
+        },
       },
-    },
-  });
+    });
 
-  // Generic error message to prevent user enumeration
-  if (error) {
-    if (error.message.includes('already registered')) {
-      return { error: 'Registration failed. Please try again or contact support.' };
+    if (error) {
+      return { error: error.message };
     }
-    return { error: 'Registration failed. Please check your information and try again.' };
-  }
 
-  // Success: no error
-  return { error: null };
+    return { success: 'Registration successful! Please check your email to confirm your account.' };
+  } catch (error) {
+    return { error: 'An unexpected error occurred. Please try again.' };
+  }
 }
 
 export async function logout() {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    return { error: error.message };
+
+  try {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidatePath('/', 'layout');
+    redirect('/login');
+  } catch (error) {
+    return { error: 'An unexpected error occurred. Please try again.' };
   }
-  return { error: null };
-}
-
-export async function getCurrentUser() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user;
-}
-
-export async function getSession() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getSession();
-  return data.session;
-}
-
-// Helper function to check if user has admin role
-export async function isUserAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) return false;
-  
-  // Check user metadata for admin role
-  return user.user_metadata?.role === 'admin' || user.email === 'admin@alxpolly.com';
 }

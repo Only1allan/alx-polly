@@ -5,24 +5,31 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabase";
+import { login } from "@/app/lib/actions/auth-actions";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      alert(error.message);
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+
+    const result = await login(formData);
+
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
     } else {
-      router.push("/polls");
-      router.refresh();
+      window.location.href = '/dashboard/polls'; // Full reload to pick up session
     }
   };
 
@@ -33,10 +40,12 @@ export function LoginForm() {
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
+            type="email"
             placeholder="email@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
           />
         </div>
         <div className="flex flex-col space-y-1.5">
@@ -47,9 +56,13 @@ export function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="current-password"
           />
         </div>
-        <Button type="submit">Login</Button>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </Button>
       </div>
     </form>
   );

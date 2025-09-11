@@ -10,15 +10,16 @@ import { register } from '@/app/lib/actions/auth-actions';
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
+    
     const formData = new FormData(event.currentTarget);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
 
@@ -28,13 +29,19 @@ export default function RegisterPage() {
       return;
     }
 
-    const result = await register({ name, email, password });
+    const result = await register(formData);
 
     if (result?.error) {
       setError(result.error);
       setLoading(false);
     } else {
-      window.location.href = '/polls'; // Full reload to pick up session
+      if (result?.success) {
+        setSuccess(result.success);
+        setLoading(false);
+        // Don't redirect immediately if email confirmation is needed
+      } else {
+        window.location.href = '/dashboard/polls'; // Full reload to pick up session
+      }
     }
   };
 
@@ -89,6 +96,7 @@ export default function RegisterPage() {
               />
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-600 text-sm">{success}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Registering...' : 'Register'}
             </Button>

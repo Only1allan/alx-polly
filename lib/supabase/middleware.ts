@@ -31,14 +31,23 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // Define public paths that don't require authentication
+  const publicPaths = ['/login', '/register', '/auth']
+  const isPublicPath = publicPaths.some(path => 
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  // If user is not authenticated and trying to access protected route
+  if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  // If user is authenticated and trying to access auth pages, redirect to polls
+  if (user && isPublicPath) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/polls'
     return NextResponse.redirect(url)
   }
 

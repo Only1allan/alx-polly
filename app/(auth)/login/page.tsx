@@ -18,16 +18,13 @@ export default function LoginPage() {
     setError(null);
 
     const formData = new FormData(event.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    const result = await login({ email, password });
+    const result = await login(formData);
 
     if (result?.error) {
       setError(result.error);
       setLoading(false);
     } else {
-      window.location.href = '/polls'; // Full reload to pick up session
+      window.location.href = '/dashboard/polls'; // Full reload to pick up session
     }
   };
 

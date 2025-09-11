@@ -11,9 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { getPolls, deletePoll } from "@/lib/supabase";
-import { Poll } from "@/lib/types";
-import { useAuth } from "@/context/AuthContext";
+import { deletePoll, getUserPolls } from "@/app/lib/actions/poll-actions";
+import { useAuth } from "@/app/lib/context/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -27,6 +26,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+interface Poll {
+  id: string;
+  question: string;
+  options: string[];
+  created_by: string;  // Changed from user_id to created_by
+  created_at: string;
+}
+
 export default function PollList() {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,8 +43,12 @@ export default function PollList() {
   useEffect(() => {
     async function loadPolls() {
       try {
-        const polls = await getPolls();
-        setPolls(polls);
+        const result = await getUserPolls();
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setPolls(result.polls);
+        }
       } catch (error: any) {
         setError(error.message);
       } finally {
@@ -45,13 +56,19 @@ export default function PollList() {
       }
     }
 
-    loadPolls();
-  }, []);
+    if (session) {
+      loadPolls();
+    }
+  }, [session]);
 
-  const handleDelete = async (pollId: number) => {
+  const handleDelete = async (pollId: string) => {
     try {
-      await deletePoll(pollId);
-      setPolls(polls.filter((poll) => poll.id !== pollId));
+      const result = await deletePoll(pollId);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setPolls(polls.filter((poll) => poll.id !== pollId));
+      }
     } catch (error: any) {
       setError(error.message);
     }
@@ -83,7 +100,7 @@ export default function PollList() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Click to view details and vote.
+                {poll.options.length} options available
               </p>
             </CardContent>
           </Link>
