@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# gemini cli settings (contains sensitive tokens)
+.gemini/settings.json
+
 # vercel
 .vercel
 
